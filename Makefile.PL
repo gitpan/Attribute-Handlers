@@ -2,6 +2,6 @@
 use ExtUtils::MakeMaker;
 WriteMakefile(
 		NAME	=> 'Attribute::Handlers',
-		VERSION => '0.70',
+		VERSION => '0.75',
 
 	     );

@@ -17,4 +17,4 @@ demo/demo_hashdir.pl
 demo/demo_phases.pl
 demo/demo_range.pl
 demo/demo_rawdata.pl
-test.pl
+t/multi.t

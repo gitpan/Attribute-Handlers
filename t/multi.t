@@ -14,7 +14,9 @@ CHECK { $main::phase++ }
 sub ok { $::count++; push @::results, [$_[1], $_[0]?"":"not "]; }
 
 END { print "1..$::count\n";
-      print map "$_->[1]ok $_->[0]\n", sort {$a->[0]<=>$b->[0]} @::results }
+      print map "$_->[1]ok $_->[0]\n",
+		sort {$a->[0]<=>$b->[0]}
+			grep $_->[0], @::results }
 
 package Test;
 use warnings;
@@ -103,7 +105,7 @@ sub FETCH { ::ok(1,35); return 1 }
 sub STORE { ::ok(1,36); return 1 }
 sub FETCHSIZE { 100 }
 
-package Tie::Rowdy;
+package Tie::Row::dy;
 
 sub TIEHASH { ::ok(1,$_[1]); bless {}, $_[0] }
 sub FETCH { ::ok(1,38); return 1 }
@@ -115,7 +117,7 @@ eval 'sub x7 :ATTR(SCALAR) :ATTR(CODE) {}' and ::ok(0,40) or ::ok(1,40);
 
 use Attribute::Handlers autotie => {      Other::Loud => Tie::Loud,
 				                Noisy => Tie::Noisy,
-				     UNIVERSAL::Rowdy => Tie::Rowdy,
+				     UNIVERSAL::Rowdy => Tie::Row::dy,
                                    };
 
 my Other $loud : Loud;
