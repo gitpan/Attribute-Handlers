@@ -2,7 +2,7 @@ package Attribute::Handlers;
 use 5.006;
 use Carp;
 use warnings;
-$VERSION = '0.76';
+$VERSION = '0.77';
 # $DB::single=1;
 
 my %symcache;
@@ -31,6 +31,14 @@ my @declarations;
 my %raw;
 my %phase;
 my %sigil = (SCALAR=>'$', ARRAY=>'@', HASH=>'%');
+my $global_phase = 0;
+my %global_phases = (
+	BEGIN	=> 0,
+	CHECK	=> 1,
+	INIT	=> 2,
+	END	=> 3,
+);
+my @global_phases = qw(BEGIN CHECK INIT END);
 
 sub _usage_AH_ {
 	croak "Usage: use $_[0] autotie => {AttrName => TieClassName,...}";
@@ -120,6 +128,8 @@ sub _gen_handler_AH_() {
 			$phase{$ref}{CHECK} = 1
 				if $data =~ s/\s*,?\s*(CHECK)\s*,?\s*//
 				|| ! keys %{$phase{$ref}};
+			# Added for cleanup to not pollute next call.
+			(%lastattr = ()),
 			croak "Can't have two ATTR specifiers on one subroutine"
 				if keys %lastattr;
 			croak "Bad attribute type: ATTR($data)"
@@ -131,8 +141,22 @@ sub _gen_handler_AH_() {
 			next unless $handler;
 		        my $decl = [$pkg, $ref, $attr, $data,
 				    $raw{$handler}, $phase{$handler}];
-			_apply_handler_AH_($decl,'BEGIN');
-			push @declarations, $decl;
+			foreach my $gphase (@global_phases) {
+			    _apply_handler_AH_($decl,$gphase)
+				if $global_phases{$gphase} <= $global_phase;
+			}
+			if ($global_phase != 0) {
+				# if _gen_handler_AH_ is being called after 
+				# CHECK it's for a lexical, so make sure
+				# it didn't want to run anything later
+			
+				local $Carp::CarpLevel = 2;
+				carp "Won't be able to apply END handler"
+					if $phase{$handler}{END};
+			}
+			else {
+				push @declarations, $decl
+			}
 		}
 		$_ = undef;
 	    }
@@ -168,14 +192,21 @@ sub _apply_handler_AH_ {
 	return 1;
 }
 
-CHECK {
-	_resolve_lastattr;
-	_apply_handler_AH_($_,'CHECK') foreach @declarations;
+{
+        no warnings 'void';
+        CHECK {
+               $global_phase++;
+               _resolve_lastattr;
+               _apply_handler_AH_($_,'CHECK') foreach @declarations;
+        }
+
+        INIT {
+                $global_phase++;
+                _apply_handler_AH_($_,'INIT') foreach @declarations
+        }
 }
 
-INIT { _apply_handler_AH_($_,'INIT') foreach @declarations }
-
-END { _apply_handler_AH_($_,'END') foreach @declarations }
+END { $global_phase++; _apply_handler_AH_($_,'END') foreach @declarations }
 
 1;
 __END__
@@ -278,7 +309,7 @@ attribute C<:ATTR>. For example:
 			"in phase $phase\n";
 	}
 
-This creates an handler for the attribute C<:Loud> in the class LoudDecl.
+This creates a handler for the attribute C<:Loud> in the class LoudDecl.
 Thereafter, any subroutine declared with a C<:Loud> attribute in the class
 LoudDecl:
 
@@ -440,7 +471,7 @@ the data argument (C<$_[4]>) to a useable form before passing it to
 the handler get in the way.
 
 You can turn off that eagerness-to-help by declaring
-an attribute handler with the the keyword C<RAWDATA>. For example:
+an attribute handler with the keyword C<RAWDATA>. For example:
 
         sub Raw          : ATTR(RAWDATA) {...}
         sub Nekkid       : ATTR(SCALAR,RAWDATA) {...}
@@ -786,6 +817,12 @@ not declarable) that Perl can tie.
 Something is rotten in the state of the program. An attributed
 subroutine ceased to exist between the point it was declared and the point
 at which its attribute handler(s) would have been called.
+
+=item C<Won't be able to apply END handler>
+
+You have defined an END handler for an attribute that is being applied
+to a lexical variable.  Since the variable may not be available during END
+this won't happen.
 
 =back
 
