@@ -1,0 +1,13 @@
+MANIFEST
+Makefile.PL
+README
+Changes
+/lib/Attributes/Handlers.pm
+MyClass.pm
+Descriptions.pm
+Demo.pm
+demo.pl
+demo2.pl
+demo3.pl
+demo4.pl
+test.pl
