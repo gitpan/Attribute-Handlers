@@ -19,3 +19,8 @@ Revision history for Perl extension Attribute::Handlers
 	- Added autotie functionality
 
 	- Tweaked handling of anon arrays as attribute args
+
+
+0.61	Thu May 10 16:28:06 2001
+
+	- Critical doc path

@@ -2,7 +2,7 @@ package Attribute::Handlers;
 use 5.006;
 use Carp;
 use warnings;
-$VERSION = '0.60';
+$VERSION = '0.61';
 $DB::single=1;
 
 sub findsym {
@@ -138,7 +138,7 @@ Attribute::Handlers - Simpler definition of attribute handlers
 
 =head1 VERSION
 
-This document describes version 0.60 of Attribute::Handlers,
+This document describes version 0.61 of Attribute::Handlers,
 released May 10, 2001.
 
 =head1 SYNOPSIS
@@ -374,9 +374,9 @@ used for all types of referents like so:
 	package LoudDecl;
 	use Attribute::Handlers;
 
-	sub SeriousLoud :ATTR(ALL) { warn "Hearing loss imminent" }
+	sub SeriousLoud :ATTR(ANY) { warn "Hearing loss imminent" }
 
-(I.e. C<ATTR(ALL)> is a synonym for C<:ATTR>).
+(I.e. C<ATTR(ANY)> is a synonym for C<:ATTR>).
 
 
 =head2 Non-interpretive attribute handlers

@@ -1,5 +1,5 @@
 ==============================================================================
-                Release of version 0.60 of Attribute::Handlers
+                Release of version 0.61 of Attribute::Handlers
 ==============================================================================
 
 
@@ -57,18 +57,10 @@ COPYRIGHT
 
 ==============================================================================
 
-CHANGES IN VERSION 0.60
+CHANGES IN VERSION 0.61
 
 
-	- Added RAWDATA specifier
-
-	- Cleaned up documentation (thanks Garrett)
-
-	- Added warning for all-lowercase handlers (thanks Garrett)
-
-	- Added autotie functionality
-
-	- Tweaked handling of anon arrays as attribute args
+	- Critical doc path
 
 
 ==============================================================================
