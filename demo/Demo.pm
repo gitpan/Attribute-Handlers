@@ -5,10 +5,11 @@ use Attribute::Handlers;
 no warnings 'redefine';
 
 sub Demo : ATTR(SCALAR) {
-	my ($package, $symbol, $referent, $attr, $data) = @_;
+	my ($package, $symbol, $referent, $attr, $data, $phase) = @_;
 	$data = '<undef>' unless defined $data;
 	print STDERR 'Scalar $', *{$symbol}{NAME},
-		     " ($referent) was ascribed ${attr} with data ($data)\n";
+		     " ($referent) was ascribed ${attr}\n",
+		     "with data ($data)\nin phase $phase\n";
 };
 
 sub This : ATTR(SCALAR) {

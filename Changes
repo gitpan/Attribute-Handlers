@@ -23,4 +23,24 @@ Revision history for Perl extension Attribute::Handlers
 
 0.61	Thu May 10 16:28:06 2001
 
-	- Critical doc path
+	- Critical doc patch
+
+
+0.65	Sun Jun  3 07:40:03 2001
+
+	- Added __CALLER__ pseudo class for 'autotie'
+
+	- Added multi-phasic attribute handlers (thanks Garrett)
+
+	- Fixed nasty $SIG{__WARN__}-induced bug
+
+	- Cached ref/symbol mapping for better performance and more
+	  reliable symbol identification under evil typeglob manipulations
+
+	- Added option to pass arguments when autotied classes are imported
+	  (thanks Marcel)
+
+	- Fixed bug in handling of lexical SCALAR refs
+
+	- Cleaned up interactions with other class hierarchies
+	  (due to being base class of UNIVERSAL)

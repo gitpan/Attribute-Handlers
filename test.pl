@@ -1,15 +1,9 @@
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl test.pl'
-
-######################### We start with some black magic to print on failure.
-
-# Change 1..1 below to 1..last_test_to_print .
-# (It may become useful if the test is moved to ./t subdirectory.)
-
 END {print "not ok 1\n" unless $loaded;}
 use v5.6.0;
 use Attribute::Handlers;
 $loaded = 1;
+
+CHECK { $main::phase++ }
 
 ######################### End of black magic.
 
@@ -26,7 +20,9 @@ package Test;
 use warnings;
 no warnings 'redefine';
 
-sub UNIVERSAL::Okay :ATTR { ::ok @{$_[4]} }
+sub UNIVERSAL::Lastly :ATTR(INIT) { ::ok $_[4][0] && $main::phase, $_[4][1] }
+
+sub UNIVERSAL::Okay :ATTR(BEGIN) { ::ok  $_[4][0] && !$main::phase, $_[4][1] }
 
 sub Dokay :ATTR(SCALAR) { ::ok @{$_[4]} }
 sub Dokay :ATTR(HASH)   { ::ok @{$_[4]} }
@@ -40,10 +36,10 @@ sub Aokay :ATTR(ANY)    { ::ok @{$_[4]} }
 package main;
 use warnings;
 
-my $x1 :Okay(1,1);
-my @x1 :Okay(1=>2);
-my %x1 :Okay(1,3);
-sub x1 :Okay(1,4) {}
+my $x1 :Lastly(1,41);
+my @x1 :Lastly(1=>42);
+my %x1 :Lastly(1,43);
+sub x1 :Lastly(1,44) {}
 
 my Test $x2 :Dokay(1,5);
 
@@ -84,6 +80,11 @@ sub y3 :Okay(1,27) {}
 
 package Unrelated;
 
+my $x11 :Okay(1,1);
+my @x11 :Okay(1=>2);
+my %x11 :Okay(1,3);
+sub x11 :Okay(1,4) {}
+
 BEGIN { eval 'my $x7 :Dokay(0,28)' or ::ok(1,28); }
 my Test $x8 :Dokay(1,29);
 eval 'sub x7 :Dokay(0,30) {}' or ::ok(1,30);
@@ -110,6 +111,8 @@ sub STORE { ::ok(1,39); return 1 }
 
 package main;
 
+eval 'sub x7 :ATTR(SCALAR) :ATTR(CODE) {}' and ::ok(0,40) or ::ok(1,40);
+
 use Attribute::Handlers autotie => {      Other::Loud => Tie::Loud,
 				                Noisy => Tie::Noisy,
 				     UNIVERSAL::Rowdy => Tie::Rowdy,
@@ -123,3 +126,4 @@ $noisy[0]++;
 
 my %rowdy : Rowdy(37);
 $rowdy{key}++;
+

@@ -1,15 +1,10 @@
 ==============================================================================
-                Release of version 0.61 of Attribute::Handlers
+                Release of version 0.70 of Attribute::Handlers
 ==============================================================================
 
 
 NAME
     Attribute::Handlers - Simpler definition of attribute handlers
-
-VERSION
-    This document describes version 0.50 of Attribute::Handlers, released
-    November 1, 2000.
-
 
 DESCRIPTION
     This module, when inherited by a package, allows that package's class to
@@ -57,11 +52,9 @@ COPYRIGHT
 
 ==============================================================================
 
-CHANGES IN VERSION 0.61
+CHANGES IN VERSION 0.70
 
-
-	- Critical doc path
-
+(No changes have been documented for this version)
 
 ==============================================================================
 
