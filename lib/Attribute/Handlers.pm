@@ -1,7 +1,9 @@
 package Attribute::Handlers;
 use 5.006;
 use Carp;
-$VERSION = '0.51';
+use warnings;
+$VERSION = '0.60';
+$DB::single=1;
 
 sub findsym {
 	my ($pkg, $ref, $type) = @_;
@@ -14,6 +16,7 @@ sub findsym {
 my %validtype = (
 	VAR	=> [qw[SCALAR ARRAY HASH]],
         ANY	=> [qw[SCALAR ARRAY HASH CODE]],
+        ""	=> [qw[SCALAR ARRAY HASH CODE]],
         SCALAR	=> [qw[SCALAR]],
         ARRAY	=> [qw[ARRAY]],
         HASH	=> [qw[HASH]],
@@ -21,12 +24,47 @@ my %validtype = (
 );
 my %lastattr;
 my @declarations;
+my %raw;
+my %sigil = (SCALAR=>'$', ARRAY=>'@', HASH=>'%');
 
+sub usage {croak "Usage: use $_[0] autotie => {AttrName => TieClassName,...}"}
+
+sub import {
+    my $class = shift @_;
+    while (@_) {
+	my $cmd = shift;
+        if ($cmd eq 'autotie') {
+            my $mapping = shift;
+	    usage $class unless ref($mapping) eq 'HASH';
+	    while (my($attr, $tieclass) = each %$mapping) {
+		usage $class unless $attr =~ m/^[a-z]\w*(::[a-z]\w*)*$/i
+		                 && $tieclass =~ m/^[a-z]\w*(::[a-z]\w*)*$/i
+		                 && eval "use base $tieclass; 1";
+	        eval qq{
+	            sub $attr : ATTR(VAR) {
+			my (\$ref, \$data) = \@_[2,4];
+			\$data = [ \$data ] unless ref \$data eq 'ARRAY';
+			my \$type = ref \$ref;
+			 (\$type eq 'SCALAR')? tie \$\$ref,'$tieclass',\@\$data
+			:(\$type eq 'ARRAY') ? tie \@\$ref,'$tieclass',\@\$data
+			:(\$type eq 'HASH')  ? tie \%\$ref,'$tieclass',\@\$data
+			: die "Internal error: can't autotie \$type"
+	            } 1
+	        } or die "Internal error: $@";
+	    }
+        }
+        else {
+            croak "Can't understand $_"; 
+        }
+    }
+}
 sub resolve_lastattr {
 	return unless $lastattr{ref};
 	my $sym = findsym @lastattr{'pkg','ref'}
 		or die "Internal error: $lastattr{pkg} symbol went missing";
 	my $name = *{$sym}{NAME};
+	warn "Declaration of $name attribute in package $lastattr{pkg} may clash with future reserved word\n"
+		if $^W and $name !~ /[A-Z]/;
 	foreach ( @{$validtype{$lastattr{type}}} ) {
 		*{"$lastattr{pkg}::_ATTR_${_}_${name}"} = $lastattr{ref};
 	}
@@ -40,8 +78,11 @@ sub AUTOLOAD {
 	croak "Attribute handler '$2' doesn't handle $1 attributes";
 }
 
+sub DESTROY {}
+
+my $builtin = qr/lvalue|method|locked/;
+
 sub handler() {
-	my $type = $_;
 	return sub {
 	    resolve_lastattr;
 	    my ($pkg, $ref, @attrs) = @_;
@@ -49,17 +90,20 @@ sub handler() {
 		my ($attr, $data) = /^([a-z_]\w*)(?:[(](.*)[)])?$/i or next;
 		if ($attr eq 'ATTR') {
 			$data ||= "ANY";
+			$raw{$ref} = $data =~ s/\s*,?\s*RAWDATA\s*,?\s*//;
 			croak "Bad attribute type: ATTR($data)"
 				unless $validtype{$data};
-			%lastattr = ( pkg=>$pkg, ref=>$ref, type=>$data );
+			%lastattr=(pkg=>$pkg,ref=>$ref,type=>$data);
 		}
 		else {
-			next unless $pkg->can($attr);
-			push @declarations, [$pkg, $ref, $attr, $data];
+			my $handler = $pkg->can($attr);
+			next unless $handler;
+			push @declarations,
+			     [$pkg, $ref, $attr, $data, $raw{$handler}];
 		}
 		$_ = undef;
 	    }
-	    return grep {defined} @attrs;
+	    return grep {defined && !/$builtin/} @attrs;
 	}
 }
 
@@ -70,14 +114,17 @@ push @UNIVERSAL::ISA, 'Attribute::Handlers'
 CHECK {
 	resolve_lastattr;
 	foreach (@declarations) {
-		my ($pkg, $ref, $attr, $data) = @$_;
+		my ($pkg, $ref, $attr, $data, $raw) = @$_;
 		my $type = ref $ref;
 		my $sym = findsym($pkg, $ref);
 		$sym ||= $type eq 'CODE' ? 'ANON' : 'LEXICAL';
 		my $handler = "_ATTR_${type}_${attr}";
 		no warnings;
-		$data = eval("package $pkg; no warnings;
-			      \$SIG{__WARN__}=sub{die}; [$data]") || [$data];
+		my $evaled = !$raw && eval("package $pkg; no warnings;
+					    \$SIG{__WARN__}=sub{die}; [$data]");
+		$data = ($evaled && $data =~ /^\s*\[/)  ? [$evaled]
+		      : ($evaled)			? $evaled
+		      :					  [$data];
 		$pkg->$handler($sym, $ref, $attr, @$data>1? $data : $data->[0]);
 	}
 }
@@ -91,8 +138,8 @@ Attribute::Handlers - Simpler definition of attribute handlers
 
 =head1 VERSION
 
-This document describes version 0.51 of Attribute::Handlers,
-released May  1, 2001.
+This document describes version 0.60 of Attribute::Handlers,
+released May 10, 2001.
 
 =head1 SYNOPSIS
 
@@ -111,7 +158,7 @@ released May  1, 2001.
 
 		# Do whatever to $referent here (executed in CHECK phase).
 		...
-	};
+	}
 
 	sub Bad : ATTR(SCALAR) {
 		# Invoked for any scalar variable with a :Bad attribute,
@@ -125,20 +172,20 @@ released May  1, 2001.
 		# provided the variable was declared in MyClass (or
 		# a derived class) or typed to MyClass.
 		...
-	};
+	}
 
 	sub Good : ATTR(HASH) {
 		# Invoked for any hash variable with a :Good attribute,
 		# provided the variable was declared in MyClass (or
 		# a derived class) or typed to MyClass.
 		...
-	};
+	}
 
 	sub Ugly : ATTR(CODE) {
 		# Invoked for any subroutine declared in MyClass (or a 
 		# derived class) with an :Ugly attribute.
 		...
-	};
+	}
 
 	sub Omni : ATTR {
 		# Invoked for any scalar, array, hash, or subroutine
@@ -147,7 +194,12 @@ released May  1, 2001.
 		# or the variable was typed to MyClass.
 		# Use ref($_[2]) to determine what kind of referent it was.
 		...
-	};
+	}
+
+
+	use Attribute::Handlers autotie => { Cycle => Tie::Cycle };
+
+	my $next : Cycle(['A'..'Z']);
 
 
 =head1 DESCRIPTION
@@ -241,7 +293,8 @@ last argument.
 
 Attribute::Handlers makes strenuous efforts to convert
 the data argument (C<$_[4]>) to a useable form before passing it to
-the handler. For example, all of these:
+the handler (but see L<"Non-interpretive attribute handlers">).
+For example, all of these:
 
 	sub foo :Loud(till=>ears=>are=>bleeding) {...}
 	sub foo :Loud(['till','ears','are','bleeding']) {...}
@@ -324,6 +377,85 @@ used for all types of referents like so:
 	sub SeriousLoud :ATTR(ALL) { warn "Hearing loss imminent" }
 
 (I.e. C<ATTR(ALL)> is a synonym for C<:ATTR>).
+
+
+=head2 Non-interpretive attribute handlers
+
+Occasionally the strenuous efforts Attribute::Handlers makes to convert
+the data argument (C<$_[4]>) to a useable form before passing it to
+the handler get in the way.
+
+You can turn off that eagerness-to-help by declaring
+an attribute handler with the the keyword C<RAWDATA>. For example:
+
+	sub Raw          : ATTR(RAWDATA) {...}
+	sub Nekkid       : ATTR(SCALAR,RAWDATA) {...}
+	sub Au::Naturale : ATTR(RAWDATA,ANY) {...}
+
+Then the handler makes absolutely no attempt to interpret the data it
+receives and simply passes it as a string:
+
+	my $power : Raw(1..100);	# handlers receives "1..100"
+
+
+=head2 Attributes as C<tie> interfaces
+
+Attributes make an excellent and intuitive interface through which to tie
+variables. For example:
+
+        use Attribute::Handlers;
+        use Tie::Cycle;
+
+        sub UNIVERSAL::Cycle : ATTR(SCALAR) {
+                my ($package, $symbol, $referent, $attr, $data) = @_;
+                $data = [ $data ] unless ref $data eq 'ARRAY';
+                tie $$referent, 'Tie::Cycle', $data;
+        }
+
+        # and thereafter...
+
+        package main;
+
+        my $next : Cycle('A'..'Z');	# $next is now a tied variable
+
+        while (<>) {
+                print $next;
+        }
+
+In fact, this pattern is so widely applicable that Attribute::Handlers
+provides a way to automate it: specifying C<'autotie'> in the
+C<use Attribute::Handlers> statement. So, the previous example,
+could also be written:
+
+        use Attribute::Handlers autotie => { Cycle => 'Tie::Cycle' };
+
+        # and thereafter...
+
+        package main;
+
+        my $next : Cycle('A'..'Z');	# $next is now a tied variable
+
+        while (<>) {
+                print $next;
+
+The argument after C<'autotie'> is a reference to a hash in which each key is
+the name of an attribute to be created, and each value is the class to which
+variables ascribed that attribute should be tied.
+
+Note that there is no longer any need to import the Tie::Cycle module --
+Attribute::Handlers takes care of that automagically.
+
+If the attribute name is unqualified, the attribute is installed in the
+current package. Otherwise it is installed in the qualifier's package:
+
+
+        package Here;
+
+        use Attribute::Handlers autotie => {
+                Other::Good => Tie::SecureHash, # tie attr installed in Other::
+                        Bad => Tie::Taxes,      # tie attr installed in Here::
+            UNIVERSAL::Ugly => Software::Patent # tie attr installed everywhere
+        };
 
 
 =head1 EXAMPLES
@@ -476,6 +608,13 @@ A handler for attributes of the specified name I<was> defined, but not
 for the specified type of declaration. Typically encountered whe trying
 to apply a C<VAR> attribute handler to a subroutine, or a C<SCALAR>
 attribute handler to some other type of variable.
+
+=item C<Declaration of %s attribute in package %s may clash with future reserved word>
+
+A handler for an attributes with an all-lowercase name was declared. An
+attribute with an all-lowercase name might have a meaning to Perl
+itself some day, even though most don't yet. Use a mixed-case attribute
+name, instead.
 
 =item C<Internal error: %s symbol went missing>
 

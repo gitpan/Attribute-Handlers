@@ -89,3 +89,37 @@ my Test $x8 :Dokay(1,29);
 eval 'sub x7 :Dokay(0,30) {}' or ::ok(1,30);
 
 
+package Tie::Loud;
+
+sub TIESCALAR { ::ok(1,31); bless {}, $_[0] }
+sub FETCH { ::ok(1,32); return 1 }
+sub STORE { ::ok(1,33); return 1 }
+
+package Tie::Noisy;
+
+sub TIEARRAY { ::ok(1,$_[1]); bless {}, $_[0] }
+sub FETCH { ::ok(1,35); return 1 }
+sub STORE { ::ok(1,36); return 1 }
+sub FETCHSIZE { 100 }
+
+package Tie::Rowdy;
+
+sub TIEHASH { ::ok(1,$_[1]); bless {}, $_[0] }
+sub FETCH { ::ok(1,38); return 1 }
+sub STORE { ::ok(1,39); return 1 }
+
+package main;
+
+use Attribute::Handlers autotie => {      Other::Loud => Tie::Loud,
+				                Noisy => Tie::Noisy,
+				     UNIVERSAL::Rowdy => Tie::Rowdy,
+                                   };
+
+my Other $loud : Loud;
+$loud++;
+
+my @noisy : Noisy(34);
+$noisy[0]++;
+
+my %rowdy : Rowdy(37);
+$rowdy{key}++;

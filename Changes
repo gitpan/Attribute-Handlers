@@ -6,3 +6,16 @@ Revision history for Perl extension Attribute::Handlers
 0.51	Tue May  1 06:33:15 2001
 
 	- Fixed fatal file path error in MANIFEST (thanks Marcel and Jost)
+
+
+0.60	Thu May 10 15:46:02 2001
+
+	- Added RAWDATA specifier
+
+	- Cleaned up documentation (thanks Garrett)
+
+	- Added warning for all-lowercase handlers (thanks Garrett)
+
+	- Added autotie functionality
+
+	- Tweaked handling of anon arrays as attribute args
