@@ -1,7 +1,7 @@
 package Attribute::Handlers;
 use 5.006;
 use Carp;
-$VERSION = '0.50';
+$VERSION = '0.51';
 
 sub findsym {
 	my ($pkg, $ref, $type) = @_;
@@ -91,8 +91,8 @@ Attribute::Handlers - Simpler definition of attribute handlers
 
 =head1 VERSION
 
-This document describes version 0.50 of Attribute::Handlers,
-released April 30, 2001.
+This document describes version 0.51 of Attribute::Handlers,
+released May  1, 2001.
 
 =head1 SYNOPSIS
 

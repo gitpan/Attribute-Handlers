@@ -2,7 +2,7 @@ MANIFEST
 Makefile.PL
 README
 Changes
-/lib/Attributes/Handlers.pm
+lib/Attribute/Handlers.pm
 MyClass.pm
 Descriptions.pm
 Demo.pm

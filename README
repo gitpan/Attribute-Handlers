@@ -1,5 +1,5 @@
 ==============================================================================
-                Release of version 0.50 of Attribute::Handlers
+                Release of version 0.51 of Attribute::Handlers
 ==============================================================================
 
 
@@ -57,9 +57,10 @@ COPYRIGHT
 
 ==============================================================================
 
-CHANGES IN VERSION 0.50
+CHANGES IN VERSION 0.51
 
 
+	- Fixed fatal file path error in MANIFEST (thanks Marcel and Jost)
 
 
 ==============================================================================
