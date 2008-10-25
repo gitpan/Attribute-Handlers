@@ -1,0 +1,13 @@
+--- #YAML:1.0
+name:                Attribute-Handlers
+version:             0.80
+abstract:            Simpler definition of attribute handlers
+license:             perl
+author:              
+    - Damian Conway
+generated_by:        ExtUtils::MakeMaker version 6.42
+distribution_type:   module
+requires:     
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3
