@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Attribute-Handlers
-version:             0.80
+version:             0.81
 abstract:            Simpler definition of attribute handlers
 license:             perl
 author:              
