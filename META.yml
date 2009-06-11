@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Attribute-Handlers
-version:            0.84
+version:            0.85
 abstract:           Simpler definition of attribute handlers
 author:
     - Damian Conway
