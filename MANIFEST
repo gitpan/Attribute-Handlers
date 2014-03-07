@@ -21,5 +21,4 @@ t/constants.t
 t/data_convert.t
 t/linerep.t
 t/multi.t
-META.yml                                 Module YAML meta-data (added by MakeMaker)
-META.json                                Module JSON meta-data (added by MakeMaker)
+META.yml                                 Module meta-data (added by MakeMaker)

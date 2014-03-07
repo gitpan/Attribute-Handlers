@@ -1,25 +1,26 @@
----
-abstract: 'Simpler definition of attribute handlers'
+--- #YAML:1.0
+name:               Attribute-Handlers
+version:            0.96
+abstract:           Simpler definition of attribute handlers
 author:
-  - 'Damian Conway'
-build_requires:
-  ExtUtils::MakeMaker: 0
+    - Damian Conway
+license:            perl
+distribution_type:  module
 configure_requires:
-  ExtUtils::MakeMaker: 0
-dynamic_config: 1
-generated_by: 'ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.112150'
-license: perl
-meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
-name: Attribute-Handlers
-no_index:
-  directory:
-    - t
-    - inc
-requires: {}
+    ExtUtils::MakeMaker:  0
+build_requires:
+    ExtUtils::MakeMaker:  0
+requires:
+    parent:  0
 resources:
-  bugtracker: http://rt.perl.org/perlbug/
-  repository: 'git://perl5.git.perl.org/perl.git perl-git'
-  x_MailingList: http://lists.cpan.org/showlist.cgi?name=perl5-porters
-version: 0.93
+    bugtracker:   http://rt.perl.org/perlbug/
+    MailingList:  http://lists.cpan.org/showlist.cgi?name=perl5-porters
+    repository:   git://perl5.git.perl.org/perl.git perl-git
+no_index:
+    directory:
+        - t
+        - inc
+generated_by:       ExtUtils::MakeMaker version 6.57_05
+meta-spec:
+    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
+    version:  1.4
